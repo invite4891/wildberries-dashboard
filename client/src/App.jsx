@@ -8,12 +8,14 @@ import {
   Tooltip,
   CartesianGrid,
   ResponsiveContainer,
+  Legend,
 } from "recharts";
 
 function App() {
   const [token, setToken] = useState("");
   const [sales, setSales] = useState([]);
   const [error, setError] = useState("");
+  const [showRevenue, setShowRevenue] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -32,29 +34,31 @@ function App() {
     }
   };
 
-  // 📊 Фильтруем и агрегируем данные по rrd_quantity
-  const filteredSales = sales.filter((sale) => {
-    const quantity = Number(sale.rrd_quantity || 0);
-    return quantity > 0;
+  // Группировка продаж по дате
+  const salesByDate = {};
+
+  sales.forEach((sale) => {
+    const date = sale.date?.split("T")[0];
+    if (!date) return;
+
+    if (!salesByDate[date]) {
+      salesByDate[date] = { quantity: 0, revenue: 0 };
+    }
+
+    salesByDate[date].quantity += 1;
+    salesByDate[date].revenue += Number(sale.forPay || 0);
   });
 
-  const salesByDate = filteredSales.reduce((acc, sale) => {
-    const date = sale.sale_dt?.split("T")[0];
-    const quantity = Number(sale.rrd_quantity || 0);
-    if (!date) return acc;
-
-    acc[date] = (acc[date] || 0) + quantity;
-    return acc;
-  }, {});
-
-  const chartData = Object.entries(salesByDate).map(([date, quantity]) => ({
+  const chartData = Object.entries(salesByDate).map(([date, values]) => ({
     date,
-    quantity,
+    quantity: values.quantity,
+    revenue: Number(values.revenue.toFixed(2)),
   }));
 
   return (
     <div style={{ padding: "2rem", fontFamily: "Arial" }}>
-      <h1>📊 Wildberries Dashboard</h1>
+      <h1>📦 Wildberries Dashboard</h1>
+
       <input
         type="text"
         placeholder="Введите API токен"
@@ -72,6 +76,17 @@ function App() {
         Получить данные
       </button>
 
+      <div style={{ marginTop: "1rem" }}>
+        <label>
+          <input
+            type="checkbox"
+            checked={showRevenue}
+            onChange={() => setShowRevenue(!showRevenue)}
+          />{" "}
+          Показать выручку вместо количества
+        </label>
+      </div>
+
       {error && (
         <div style={{ marginTop: "1rem", color: "red" }}>
           <strong>{error}</strong>
@@ -80,16 +95,19 @@ function App() {
 
       {chartData.length > 0 && (
         <>
-          <h2 style={{ marginTop: "2rem" }}>Продажи (по дате)</h2>
+          <h2 style={{ marginTop: "2rem" }}>
+            {showRevenue ? "Выручка по дням (₽)" : "Количество продаж по дням"}
+          </h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={chartData}>
               <CartesianGrid stroke="#ccc" />
               <XAxis dataKey="date" />
               <YAxis />
               <Tooltip />
+              <Legend />
               <Line
                 type="monotone"
-                dataKey="quantity"
+                dataKey={showRevenue ? "revenue" : "quantity"}
                 stroke="#8884d8"
                 dot={{ r: 3 }}
               />
