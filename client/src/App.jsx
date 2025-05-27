@@ -18,39 +18,25 @@ function App() {
   const fetchData = async () => {
     try {
       setError("");
-      const response = await axios.post("https://1c2d-195-58-50-125.ngrok-free.app/api/data", {
+      const response = await axios.post("https://093d-195-58-50-125.ngrok-free.app/api/data", {
         token,
       });
 
       const data = response.data.sales || [];
-      console.log("SALES FROM API:", data);
+      console.log("API Ответ:", data);
       setSales(data);
     } catch (err) {
-      console.error("Ошибка при получении:", err);
+      console.error("Ошибка:", err);
       setError("Ошибка при получении данных. Проверьте токен или API.");
     }
   };
 
   const salesByDate = sales.reduce((acc, sale) => {
-    const rawDate = sale.date || sale.dateAndTime;
-    if (!rawDate) return acc;
+    const date = sale.sale_dt?.split("T")[0];
+    const quantity = Number(sale.quantity || 0);
+    if (!date) return acc;
 
-    const date = rawDate.split("T")[0]; // "2025-05-20T13:45:00" → "2025-05-20"
-    const quantity = Number(
-      sale.quantity ??
-      sale.retailQuantity ??
-      sale.quantityFull ??
-      sale.qty ??
-      sale.retailAmount ??
-      0
-    );
-
-    if (!acc[date]) {
-      acc[date] = quantity;
-    } else {
-      acc[date] += quantity;
-    }
-
+    acc[date] = (acc[date] || 0) + quantity;
     return acc;
   }, {});
 
@@ -60,9 +46,8 @@ function App() {
   }));
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "Arial, sans-serif" }}>
+    <div style={{ padding: "2rem", fontFamily: "Arial" }}>
       <h1>📊 Wildberries Dashboard</h1>
-
       <input
         type="text"
         placeholder="Введите API токен"
