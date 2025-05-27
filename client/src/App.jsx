@@ -18,7 +18,7 @@ function App() {
   const fetchData = async () => {
     try {
       setError("");
-      const response = await axios.post("https://fe8c-195-58-50-125.ngrok-free.app/api/data", {
+      const response = await axios.post("https://1c2d-195-58-50-125.ngrok-free.app/api/data", {
         token,
       });
       setSales(response.data.sales || []);
