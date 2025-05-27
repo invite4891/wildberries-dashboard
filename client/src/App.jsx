@@ -8,7 +8,7 @@ export default function App() {
   const [data, setData] = useState(null);
 
   const fetchData = async () => {
-    const response = await axios.post("http://localhost:5000/api/data", { token });
+    const response = await axios.post("https://wildberries-dashboard.onrender.com", { token });
     setData(response.data);
   };
 
