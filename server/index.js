@@ -12,16 +12,16 @@ app.post('/api/data', async (req, res) => {
 
   try {
     const [sales, stocks, orders] = await Promise.all([
-      axios.get('https://statistics-api.wildberries.ru/api/v1/supplier/sales', {
-        headers: { Authorization: token }
-      }),
-      axios.get('https://statistics-api.wildberries.ru/api/v1/supplier/stocks', {
-        headers: { Authorization: token }
-      }),
-      axios.get('https://suppliers-api.wildberries.ru/api/v3/orders', {
-        headers: { Authorization: token }
-      }),
-    ]);
+  axios.get('https://seller.wildberries.ru/ns/statistics-api/api/v1/supplier/sales', {
+    headers: { Authorization: token }
+  }),
+  axios.get('https://seller.wildberries.ru/ns/statistics-api/api/v1/supplier/stocks', {
+    headers: { Authorization: token }
+  }),
+  axios.get('https://seller.wildberries.ru/ns/suppliers-api/api/v3/orders', {
+    headers: { Authorization: token }
+  }),
+]);
 
     res.json({
       sales: sales.data,
