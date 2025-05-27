@@ -9,7 +9,7 @@ export default function App() {
 
   const fetchData = async () => {
     try {
-      const response = await axios.post("https://wildberries-backend.onrender.com/api/data", { token });
+      const response = await axios.post("https://1c2d-195-58-50-125.ngrok-free.app/api/data", { token });
       setData(response.data);
     } catch (err) {
       alert("Ошибка при получении данных. Проверьте токен или API.");
