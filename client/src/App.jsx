@@ -21,7 +21,7 @@ function App() {
     try {
       setError("");
       const response = await axios.post(
-        "https://093d-195-58-50-125.ngrok-free.app/api/data",
+        "https://c5e3-195-58-50-125.ngrok-free.app/api/data",
         { token }
       );
 

@@ -1,67 +1,55 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 
 const app = express();
 const PORT = 5050;
 
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
 app.post('/api/data', async (req, res) => {
-  const { token } = req.body;
-
-  if (!token) {
-    return res.status(400).json({ error: 'Token is required' });
-  }
+  const { token, useRevenue } = req.body;
 
   try {
     const response = await axios.get(
-      'https://statistics-api.wildberries.ru/api/v1/supplier/reportDetailByPeriod',
+      'https://suppliers-api.wildberries.ru/api/v3/supplier/reportDetailByPeriod',
       {
         headers: {
-          Authorization: token,
+          Authorization: token
         },
         params: {
           dateFrom: '2025-05-01',
-          limit: 100000,
-          rrdid: 0,
-        },
+          limit: 1000,
+          rrdid: 0
+        }
       }
     );
 
-    const sales = response.data;
+    const rawData = response.data.sales;
 
-    const realSales = sales.filter((item) => item.quantity > 0);
+    const groupedData = rawData.reduce((acc, item) => {
+      const date = item.rr_dt;
+      const value = useRevenue ? item.ppvz_for_pay : 1;
 
-    const grouped = {};
+      acc[date] = (acc[date] || 0) + value;
+      return acc;
+    }, {});
 
-    realSales.forEach((sale) => {
-      const date = sale.rr_dt || sale.sale_dt?.slice(0, 10);
-      if (!grouped[date]) {
-        grouped[date] = {
-          quantity: 0,
-          forPay: 0,
-        };
-      }
-      grouped[date].quantity += sale.quantity;
-      grouped[date].forPay += sale.ppvz_for_pay;
-    });
+    const result = Object.entries(groupedData)
+      .map(([date, value]) => ({ date, value }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    const chartData = Object.entries(grouped).map(([date, values]) => ({
-      date,
-      quantity: values.quantity,
-      forPay: values.forPay,
-    }));
-
-    res.json({ chartData });
+    res.json({ sales: result });
   } catch (error) {
     console.error('API error:', error.message);
-    res.status(500).json({ error: 'Ошибка API', details: error.message });
+    res.status(error.response?.status || 500).json({
+      error: 'Ошибка API',
+      details: error.message
+    });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Backend запущен на порту ${PORT}`);
+  console.log(`✅ Backend запущен на порту ${PORT}`);
 });
