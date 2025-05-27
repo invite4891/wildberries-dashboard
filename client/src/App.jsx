@@ -18,20 +18,27 @@ function App() {
   const fetchData = async () => {
     try {
       setError("");
-      const response = await axios.post("https://093d-195-58-50-125.ngrok-free.app/api/data", {
+      const response = await axios.post("https://ТВОЙ_NGROK_АДРЕС/api/data", {
         token,
       });
 
       const data = response.data.sales || [];
-      console.log("API Ответ:", data);
+      console.log("Данные из API:", data.slice(0, 5)); // отладка
       setSales(data);
     } catch (err) {
-      console.error("Ошибка:", err);
+      console.error("Ошибка при получении данных:", err);
       setError("Ошибка при получении данных. Проверьте токен или API.");
     }
   };
 
-  const salesByDate = sales.reduce((acc, sale) => {
+  // 🔍 Фильтруем только записи с положительным количеством
+  const filteredSales = sales.filter((sale) => {
+    const quantity = Number(sale.quantity || 0);
+    return quantity > 0;
+  });
+
+  // 📊 Группируем по дате
+  const salesByDate = filteredSales.reduce((acc, sale) => {
     const date = sale.sale_dt?.split("T")[0];
     const quantity = Number(sale.quantity || 0);
     if (!date) return acc;
@@ -80,7 +87,12 @@ function App() {
               <XAxis dataKey="date" />
               <YAxis />
               <Tooltip />
-              <Line type="monotone" dataKey="quantity" stroke="#8884d8" />
+              <Line
+                type="monotone"
+                dataKey="quantity"
+                stroke="#8884d8"
+                dot={{ r: 3 }}
+              />
             </LineChart>
           </ResponsiveContainer>
         </>
