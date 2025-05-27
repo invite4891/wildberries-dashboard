@@ -1,37 +1,48 @@
-
-const express = require('express');
-const axios = require('axios');
-const cors = require('cors');
+// server/index.js
+const express = require("express");
+const cors = require("cors");
+const axios = require("axios");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.post('/api/data', async (req, res) => {
+app.post("/api/data", async (req, res) => {
   const { token } = req.body;
 
-  try {
-    const [sales, stocks, orders] = await Promise.all([
-      axios.get('https://statistics-api.wildberries.ru/api/v1/supplier/sales?dateFrom=2024-01-01', {
-        headers: { Authorization: token }
-      }),
-      axios.get('https://statistics-api.wildberries.ru/api/v1/supplier/stocks', {
-        headers: { Authorization: token }
-      }),
-      axios.get('https://suppliers-api.wildberries.ru/api/v3/orders', {
-        headers: { Authorization: token }
-      }),
-    ]);
+  if (!token) {
+    return res.status(400).json({ error: "API-токен не предоставлен." });
+  }
 
-    res.json({
-      sales: sales.data,
-      stocks: stocks.data,
-      orders: orders.data
-    });
+  try {
+    const dateFrom = "2025-05-01";
+    const dateTo = new Date().toISOString().split("T")[0];
+
+    const response = await axios.get(
+      `https://statistics-api.wildberries.ru/api/v5/supplier/reportDetailByPeriod`,
+      {
+        headers: {
+          Authorization: token,
+        },
+        params: {
+          dateFrom,
+          dateTo,
+          rrdid: 0,
+        },
+      }
+    );
+
+    res.json({ sales: response.data });
   } catch (err) {
-    res.status(400).json({ error: 'Ошибка API', details: err.message });
+    console.error("Ошибка запроса к Wildberries API:", err?.response?.data || err.message);
+    res.status(500).json({
+      error: "Ошибка API",
+      details: err?.response?.data || err.message,
+    });
   }
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Backend запущен на порту ${PORT}`));
+const PORT = 5050;
+app.listen(PORT, () => {
+  console.log(`Backend запущен на порту ${PORT}`);
+});
