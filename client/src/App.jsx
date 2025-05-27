@@ -18,12 +18,13 @@ function App() {
   const fetchData = async () => {
     try {
       setError("");
-      const response = await axios.post("https://093d-195-58-50-125.ngrok-free.app/api/data", {
-        token,
-      });
+      const response = await axios.post(
+        "https://093d-195-58-50-125.ngrok-free.app/api/data",
+        { token }
+      );
 
       const data = response.data.sales || [];
-      console.log("Данные из API:", data.slice(0, 5)); // отладка
+      console.log("Пример данных:", data.slice(0, 5));
       setSales(data);
     } catch (err) {
       console.error("Ошибка при получении данных:", err);
@@ -31,16 +32,15 @@ function App() {
     }
   };
 
-  // 🔍 Фильтруем только записи с положительным количеством
+  // 📊 Фильтруем и агрегируем данные по rrd_quantity
   const filteredSales = sales.filter((sale) => {
-    const quantity = Number(sale.quantity || 0);
+    const quantity = Number(sale.rrd_quantity || 0);
     return quantity > 0;
   });
 
-  // 📊 Группируем по дате
   const salesByDate = filteredSales.reduce((acc, sale) => {
     const date = sale.sale_dt?.split("T")[0];
-    const quantity = Number(sale.quantity || 0);
+    const quantity = Number(sale.rrd_quantity || 0);
     if (!date) return acc;
 
     acc[date] = (acc[date] || 0) + quantity;
