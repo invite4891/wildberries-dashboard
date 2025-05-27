@@ -1,120 +1,87 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { Line } from "react-chartjs-2";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
+  Chart as ChartJS,
+  LineElement,
+  CategoryScale,
+  LinearScale,
+  PointElement,
   Tooltip,
-  CartesianGrid,
-  ResponsiveContainer,
   Legend,
-} from "recharts";
+} from "chart.js";
+
+ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend);
 
 function App() {
   const [token, setToken] = useState("");
-  const [sales, setSales] = useState([]);
+  const [chartData, setChartData] = useState(null);
   const [error, setError] = useState("");
-  const [showRevenue, setShowRevenue] = useState(false);
 
   const fetchData = async () => {
+    setError("");
     try {
-      setError("");
-      const response = await axios.post(
-        "https://c5e3-195-58-50-125.ngrok-free.app/api/data",
-        { token }
-      );
+      const response = await fetch("https://c5e3-195-58-50-125.ngrok-free.app/api/data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token }),
+      });
 
-      const data = response.data.sales || [];
-      console.log("Пример данных:", data.slice(0, 5));
-      setSales(data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || "Unknown error");
+      }
+
+      const data = await response.json();
+
+      const grouped = {};
+
+      data.sales.forEach((item) => {
+        const date = item.rr_dt || item.date || item.sale_dt?.split("T")[0];
+        if (!date) return;
+
+        if (!grouped[date]) {
+          grouped[date] = 0;
+        }
+
+        grouped[date] += item.quantity || 1;
+      });
+
+      const labels = Object.keys(grouped).sort();
+      const dataset = labels.map((date) => grouped[date]);
+
+      setChartData({
+        labels,
+        datasets: [
+          {
+            label: "Продажи (шт)",
+            data: dataset,
+            borderColor: "blue",
+            tension: 0.4,
+          },
+        ],
+      });
     } catch (err) {
-      console.error("Ошибка при получении данных:", err);
       setError("Ошибка при получении данных. Проверьте токен или API.");
+      console.error(err);
     }
   };
 
-  // Группировка продаж по дате
-  const salesByDate = {};
-
-  sales.forEach((sale) => {
-    const date = sale.date?.split("T")[0];
-    if (!date) return;
-
-    if (!salesByDate[date]) {
-      salesByDate[date] = { quantity: 0, revenue: 0 };
-    }
-
-    salesByDate[date].quantity += 1;
-    salesByDate[date].revenue += Number(sale.forPay || 0);
-  });
-
-  const chartData = Object.entries(salesByDate).map(([date, values]) => ({
-    date,
-    quantity: values.quantity,
-    revenue: Number(values.revenue.toFixed(2)),
-  }));
-
   return (
-    <div style={{ padding: "2rem", fontFamily: "Arial" }}>
-      <h1>📦 Wildberries Dashboard</h1>
-
+    <div>
+      <h2>📦 Wildberries Dashboard</h2>
       <input
         type="text"
-        placeholder="Введите API токен"
         value={token}
         onChange={(e) => setToken(e.target.value)}
-        style={{
-          width: "80%",
-          padding: "0.5rem",
-          fontSize: "1rem",
-          marginBottom: "1rem",
-        }}
+        placeholder="Введите токен"
+        style={{ width: "80%" }}
       />
       <br />
-      <button onClick={fetchData} style={{ padding: "0.5rem 1.2rem" }}>
-        Получить данные
-      </button>
-
-      <div style={{ marginTop: "1rem" }}>
-        <label>
-          <input
-            type="checkbox"
-            checked={showRevenue}
-            onChange={() => setShowRevenue(!showRevenue)}
-          />{" "}
-          Показать выручку вместо количества
-        </label>
-      </div>
-
-      {error && (
-        <div style={{ marginTop: "1rem", color: "red" }}>
-          <strong>{error}</strong>
-        </div>
-      )}
-
-      {chartData.length > 0 && (
-        <>
-          <h2 style={{ marginTop: "2rem" }}>
-            {showRevenue ? "Выручка по дням (₽)" : "Количество продаж по дням"}
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
-              <CartesianGrid stroke="#ccc" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey={showRevenue ? "revenue" : "quantity"}
-                stroke="#8884d8"
-                dot={{ r: 3 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </>
-      )}
+      <button onClick={fetchData}>Получить данные</button>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {chartData && <Line data={chartData} />}
     </div>
   );
 }
