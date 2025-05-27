@@ -18,12 +18,15 @@ function App() {
   const fetchData = async () => {
     try {
       setError("");
-      const response = await axios.post("https://1c2d-195-58-50-125.ngrok-free.app/api/data", {
+      const response = await axios.post("https://fe8c-195-58-50-125.ngrok-free.app/api/data", {
         token,
       });
-      setSales(response.data.sales || []);
+
+      const data = response.data.sales || [];
+      console.log("SALES FROM API:", data);
+      setSales(data);
     } catch (err) {
-      console.error(err);
+      console.error("Ошибка при получении:", err);
       setError("Ошибка при получении данных. Проверьте токен или API.");
     }
   };
@@ -32,8 +35,15 @@ function App() {
     const rawDate = sale.date || sale.dateAndTime;
     if (!rawDate) return acc;
 
-    const date = rawDate.split("T")[0]; // Берём только дату
-    const quantity = sale.quantity || sale.retailQuantity || 0;
+    const date = rawDate.split("T")[0]; // "2025-05-20T13:45:00" → "2025-05-20"
+    const quantity = Number(
+      sale.quantity ??
+      sale.retailQuantity ??
+      sale.quantityFull ??
+      sale.qty ??
+      sale.retailAmount ??
+      0
+    );
 
     if (!acc[date]) {
       acc[date] = quantity;
@@ -50,7 +60,7 @@ function App() {
   }));
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "Arial" }}>
+    <div style={{ padding: "2rem", fontFamily: "Arial, sans-serif" }}>
       <h1>📊 Wildberries Dashboard</h1>
 
       <input
@@ -58,10 +68,15 @@ function App() {
         placeholder="Введите API токен"
         value={token}
         onChange={(e) => setToken(e.target.value)}
-        style={{ width: "80%", padding: "0.5rem", marginBottom: "1rem" }}
+        style={{
+          width: "80%",
+          padding: "0.5rem",
+          fontSize: "1rem",
+          marginBottom: "1rem",
+        }}
       />
       <br />
-      <button onClick={fetchData} style={{ padding: "0.5rem 1rem" }}>
+      <button onClick={fetchData} style={{ padding: "0.5rem 1.2rem" }}>
         Получить данные
       </button>
 
