@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+4import React, { useState } from "react";
 import axios from "axios";
 import {
   AreaChart,
@@ -24,20 +24,10 @@ const fetchData = async () => {
 
   const fullData = response.data.sales || [];
 const uniqueOps = [...new Set(fullData.map((item) => item.supplier_oper_name))];
-console.log("Все типы операций:", uniqueOps);
 
-const fullData = response.data.sales || [];
-
-const uniqueOps = [...new Set(fullData.map((item) => item.supplier_oper_name))];
-console.log("Все типы операций:", uniqueOps);
-
-console.log("Примеры order_dt:", fullData.slice(0, 5).map((item) => item.order_dt));
 
  setSalesData(fullData); 
-    console.log("salesData sample (order_dt):", salesData.slice(0, 5).map(item => item.order_dt));
-    console.log("Заказы (сырой ответ):", ordersData.slice(0, 3));
-    console.log("Продажи:", salesData.slice(0, 3));
-    console.log("Заказы:", ordersData.slice(0, 3));
+
 
  
   } catch (err) {
@@ -47,13 +37,13 @@ console.log("Примеры order_dt:", fullData.slice(0, 5).map((item) => item.
 };
 
   // 🔍 Фильтруем только записи с положительным количеством
-  const filteredSales = sales.salesData.filter((sale) => {
+  const filteredSales = salesData.filter((sale) => {
     const quantity = Number(sale.quantity || 0);
     return quantity > 0;
   });
 
   // 📊 Группируем по дате
-  const salesByDate = sales.salesData
+  const salesByDate = salesData
   .filter((item) => item.doc_type_name === "Продажа")
   .reduce((acc, item) => {
     const date = item.rr_dt || (item.sale_dt ? item.sale_dt.slice(0, 10) : null);
@@ -64,7 +54,7 @@ console.log("Примеры order_dt:", fullData.slice(0, 5).map((item) => item.
   
 
 // 📦 Заказы по дате — из salesData
-const ordersByDate = sales.salesData
+const ordersByDate = salesData
   .filter((item) => item.supplier_oper_name === "Логистика" && item.order_dt)
   .reduce((acc, item) => {
     const date = item.order_dt.slice(0, 10);
