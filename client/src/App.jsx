@@ -53,22 +53,50 @@ const uniqueOps = [...new Set(fullData.map((item) => item.supplier_oper_name))];
   }, {});
   
 
-// 📦 Заказы по дате — из salesData
-const ordersByDate = salesData
-  .filter((item) => item.supplier_oper_name === "Логистика" && item.order_dt)
-  .reduce((acc, item) => {
-    const date = item.order_dt.slice(0, 10);
-    acc[date] = (acc[date] || 0) + 1;
-    return acc;
-  }, {});
+// 📦 Заказы по дате — уникальные gNumber с датой order_dt
+const uniqueOrders = new Map();
 
-const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
+salesData
+  .filter((item) => item.gNumber && item.order_dt && item.supplier_oper_name === "Логистика")
+  .forEach((item) => {
+    if (!uniqueOrders.has(item.gNumber)) {
+      uniqueOrders.set(item.gNumber, item.order_dt);
+    }
+  });
+
+// Собираем заказы по дате
+const ordersByDate = {};
+uniqueOrders.forEach((dt) => {
+  const date = dt.slice(0, 10);
+  ordersByDate[date] = (ordersByDate[date] || 0) + 1;
+});
+
+// ⏱️ Даты: от первой до последней
+const allDates = Object.keys({ ...salesByDate, ...ordersByDate }).sort();
+const first = new Date(allDates[0]);
+const last = new Date(allDates[allDates.length - 1]);
+
+const getDateRange = (start, end) => {
+  const dates = [];
+  const current = new Date(start);
+  while (current <= end) {
+    dates.push(current.toISOString().slice(0, 10));
+    current.setDate(current.getDate() + 1);
+  }
+  return dates;
+};
+
+const fullDateRange = getDateRange(first, last);
+
+
+const ordersChartData = fullDateRange.map((date) => ({
   date,
-  quantity,
+  quantity: ordersByDate[date] || 0,
 }));
- const chartData = Object.entries(salesByDate).map(([date, quantity]) => ({
+
+const chartData = fullDateRange.map((date) => ({
   date,
-  quantity: Number(quantity),
+  quantity: salesByDate[date] || 0,
 }));
 
   return (
