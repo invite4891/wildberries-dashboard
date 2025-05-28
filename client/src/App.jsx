@@ -20,6 +20,7 @@ function App() {
   useEffect(() => {
     if (salesData.length === 0 || !chartRef.current) return;
 
+<<<<<<< HEAD
     const chart = echarts.init(chartRef.current);
 
     const option = {
@@ -48,6 +49,17 @@ function App() {
         },
       ],
     };
+=======
+  // 📊 Группируем по дате
+  const salesByDate = sales
+  .filter((item) => item.doc_type_name === "Продажа")
+  .reduce((acc, item) => {
+    const date = item.rr_dt || (item.sale_dt ? item.sale_dt.slice(0, 10) : null);
+    if (!date) return acc;
+    acc[date] = (acc[date] || 0) + (item.quantity || 1);
+    return acc;
+  }, {});
+>>>>>>> 2e7a5ee (WIP: временные изменения)
 
     chart.setOption(option);
 
