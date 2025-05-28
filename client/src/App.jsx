@@ -23,8 +23,8 @@ const fetchData = async () => {
     });
 
     const salesData = response.data.sales || [];
-    const ordersData = (response.data.orders || []).filter(
-  (item) => item.doc_type_name === "Заказ"
+  const ordersData = (response.data.orders || []).filter(
+  (item) => item.supplier_oper_name === "Заказ"
 );
 
     console.log("Заказы (сырой ответ):", ordersData.slice(0, 3));
@@ -55,13 +55,14 @@ const fetchData = async () => {
   }, {});
   
     // 📦 Заказы по дате
-const ordersByDate = sales.ordersData.reduce((acc, item) => {
-  const date = item.rr_dt || item.sale_dt || item.date;
+const ordersByDate = ordersData.reduce((acc, item) => {
+  const date = item.rr_dt?.slice(0, 10);
   if (!date) return acc;
-  const day = date.slice(0, 10);
-  acc[day] = (acc[day] || 0) + 1;
+  acc[date] = (acc[date] || 0) + 1;
   return acc;
-}, {});const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
+}, {});
+
+const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
     date,
     quantity,
   }));
