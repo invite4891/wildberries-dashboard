@@ -36,13 +36,13 @@ const fetchData = async () => {
 };
 
   // 🔍 Фильтруем только записи с положительным количеством
-  const filteredSales = sales.filter((sale) => {
+  const filteredSales = sales.salesData.filter((sale) => {
     const quantity = Number(sale.quantity || 0);
     return quantity > 0;
   });
 
   // 📊 Группируем по дате
-  const salesByDate = sales
+  const salesByDate = sales.salesData
   .filter((item) => item.doc_type_name === "Продажа")
   .reduce((acc, item) => {
     const date = item.rr_dt || (item.sale_dt ? item.sale_dt.slice(0, 10) : null);
