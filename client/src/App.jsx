@@ -40,6 +40,17 @@ console.log("Пример объекта:", fullData[0]);
   }
 };
 
+const fetchRecentOrders = async () => {
+  try {
+    const response = await axios.post("https://c5e3-195-58-50-125.ngrok-free.app/api/orders7days", {
+      token,
+    });
+    setRecentOrders(response.data.orders || []);
+  } catch (err) {
+    console.error("Ошибка при получении заказов за 7 дней:", err);
+  }
+};
+
   // 🔍 Фильтруем только записи с положительным количеством
   const filteredSales = salesData.filter((sale) => {
     const quantity = Number(sale.quantity || 0);
@@ -121,7 +132,11 @@ const chartData = fullDateRange.map((date) => ({
         }}
       />
       <br />
-      <button onClick={fetchData} style={{ padding: "0.5rem 1.2rem" }}>
+      <button onClick={() => {
+  fetchData();
+  fetchRecentOrders();
+}}
+ style={{ padding: "0.5rem 1.2rem" }}>
         Получить данные
       </button>
 
@@ -185,6 +200,46 @@ const chartData = fullDateRange.map((date) => ({
           </ResponsiveContainer>
         </>
       )}
+      
+      {recentOrders.length > 0 && (
+  <>
+    <h2 style={{ marginTop: "3rem" }}>💖 Заказы за последние 7 дней</h2>
+    <ResponsiveContainer width="100%" height={300}>
+      <AreaChart
+        data={
+          Object.entries(
+            recentOrders.reduce((acc, item) => {
+              const date = item.date?.slice(0, 10);
+              if (date) {
+                acc[date] = (acc[date] || 0) + 1;
+              }
+              return acc;
+            }, {})
+          ).map(([date, quantity]) => ({ date, quantity }))
+        }
+      >
+        <defs>
+          <linearGradient id="colorRecentOrders" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="#ff69b4" stopOpacity={0.8} />
+            <stop offset="95%" stopColor="#ff69b4" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="date" />
+        <YAxis />
+        <Tooltip />
+        <Area
+          type="monotone"
+          dataKey="quantity"
+          stroke="#ff69b4"
+          fillOpacity={1}
+          fill="url(#colorRecentOrders)"
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  </>
+)}
+      
       
     </div>
   );
