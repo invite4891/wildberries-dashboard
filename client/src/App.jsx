@@ -1,102 +1,48 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  ResponsiveContainer,
-} from "recharts";
+import SalesChart from "./components/SalesChart";
+import SalesTable from "./components/SalesTable";
 
 function App() {
-  const [token, setToken] = useState("");
-  const [sales, setSales] = useState([]);
-  const [error, setError] = useState("");
+  const [data, setData] = useState(null);
 
-  const fetchData = async () => {
-    try {
-      setError("");
-      const response = await axios.post("https://c5e3-195-58-50-125.ngrok-free.app/api/data", {
-        token,
-      });
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.post("/api/data", {
+          token:
+            "eyJhbGciOiJFUzI1NiIsImtpZCI6IjIwMjUwMjE3djEiLCJ0eXAiOiJKV1QifQ.eyJlbnQiOjEsImV4cCI6MTc1Nzk4NzU3MCwiaWQiOiIwMTk1YTQ2MC1lZGEzLTcwYTktYWZhMC0wN2IyZmE3YzlhNmIiLCJpaWQiOjcxNjMwMTkzLCJvaWQiOjExOTA0ODMsInMiOjEwNzM3NDk3NTgsInNpZCI6IjZkODZmOWZmLTY4NmQtNDM3Yi1iNjVhLTYxZGFjMjhmYjgwZCIsInQiOmZhbHNlLCJ1aWQiOjcxNjMwMTkzfQ.8DDG7qCPuT5I8j3a5_5WTmOaNZ3X1xMnH-Bz59-YWBatfDbwQIsl6qTTXQuzCmjRx-328oxWjdAkUjLOyces6Q",
+        });
+        setData(response.data.sales);
+      } catch (error) {
+        console.error("Ошибка при получении данных:", error);
+      }
+    };
 
-      const data = response.data.sales || [];
-      console.log("Данные из API:", data.slice(0, 5)); // отладка
-      setSales(data);
-    } catch (err) {
-      console.error("Ошибка при получении данных:", err);
-      setError("Ошибка при получении данных. Проверьте токен или API.");
-    }
-  };
+    fetchData();
+  }, []);
 
-  // 🔍 Фильтруем только записи с положительным количеством
-  const filteredSales = sales.filter((sale) => {
-    const quantity = Number(sale.quantity || 0);
-    return quantity > 0;
-  });
+  const processedSales = useMemo(() => {
+    if (!data || !Array.isArray(data)) return [];
 
-  // 📊 Группируем по дате
-  const salesByDate = filteredSales.reduce((acc, sale) => {
-    const date = sale.sale_dt?.split("T")[0];
-    const quantity = Number(sale.quantity || 0);
-    if (!date) return acc;
+    const filtered = data.filter(
+      (item) => item.supplier_oper_name === "Продажа" && item.rr_dt
+    );
 
-    acc[date] = (acc[date] || 0) + quantity;
-    return acc;
-  }, {});
+    const grouped = filtered.reduce((acc, item) => {
+      const date = item.rr_dt;
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {});
 
-  const chartData = Object.entries(salesByDate).map(([date, quantity]) => ({
-    date,
-    quantity,
-  }));
+    return Object.entries(grouped).map(([date, count]) => ({ date, count }));
+  }, [data]);
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "Arial" }}>
-      <h1>📊 Wildberries Dashboard</h1>
-      <input
-        type="text"
-        placeholder="Введите API токен"
-        value={token}
-        onChange={(e) => setToken(e.target.value)}
-        style={{
-          width: "80%",
-          padding: "0.5rem",
-          fontSize: "1rem",
-          marginBottom: "1rem",
-        }}
-      />
-      <br />
-      <button onClick={fetchData} style={{ padding: "0.5rem 1.2rem" }}>
-        Получить данные
-      </button>
-
-      {error && (
-        <div style={{ marginTop: "1rem", color: "red" }}>
-          <strong>{error}</strong>
-        </div>
-      )}
-
-      {chartData.length > 0 && (
-        <>
-          <h2 style={{ marginTop: "2rem" }}>Продажи (по дате)</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
-              <CartesianGrid stroke="#ccc" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="quantity"
-                stroke="#8884d8"
-                dot={{ r: 3 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </>
-      )}
+    <div className="App">
+      <h1>Аналитика продаж</h1>
+      <SalesChart data={processedSales} />
+      <SalesTable rows={processedSales} />
     </div>
   );
 }
