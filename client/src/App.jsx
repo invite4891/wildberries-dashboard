@@ -1,76 +1,102 @@
-import React, { useState, useEffect, useRef } from 'react';
-import * as echarts from 'echarts';
+import React, { useState } from "react";
+import axios from "axios";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
 
 function App() {
-  const [token, setToken] = useState('');
-  const [salesData, setSalesData] = useState([]);
-  const chartRef = useRef(null);
+  const [token, setToken] = useState("");
+  const [sales, setSales] = useState([]);
+  const [error, setError] = useState("");
 
   const fetchData = async () => {
-    const res = await fetch('/api/data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token }),
-    });
+    try {
+      setError("");
+      const response = await axios.post("https://c5e3-195-58-50-125.ngrok-free.app/api/data", {
+        token,
+      });
 
-    const data = await res.json();
-    setSalesData(data.sales || []);
+      const data = response.data.sales || [];
+      console.log("Данные из API:", data.slice(0, 5)); // отладка
+      setSales(data);
+    } catch (err) {
+      console.error("Ошибка при получении данных:", err);
+      setError("Ошибка при получении данных. Проверьте токен или API.");
+    }
   };
 
-useEffect(() => {
-  if (salesData.length === 0 || !chartRef.current) return;
+  // 🔍 Фильтруем только записи с положительным количеством
+  const filteredSales = sales.filter((sale) => {
+    const quantity = Number(sale.quantity || 0);
+    return quantity > 0;
+  });
 
-  const chart = echarts.init(chartRef.current);
+  // 📊 Группируем по дате
+  const salesByDate = sales
+  .filter((item) => item.doc_type_name === "Продажа")
+  .reduce((acc, item) => {
+    const date = item.rr_dt || (item.sale_dt ? item.sale_dt.slice(0, 10) : null);
+    if (!date || !item.quantity || item.quantity <= 0) return acc;
+    acc[date] = (acc[date] || 0) + item.quantity;
+    return acc;
+  }, {});
 
-  const option = {
-    title: {
-      text: 'Продажи по дням',
-      left: 'center',
-    },
-    tooltip: {
-      trigger: 'axis',
-    },
-    xAxis: {
-      type: 'category',
-      boundaryGap: false,
-      data: salesData.map(item => item.date),
-    },
-    yAxis: {
-      type: 'value',
-    },
-    series: [
-      {
-        name: 'Продажи',
-        type: 'line',
-        areaStyle: {},
-        data: salesData.map(item => item.count),
-        smooth: true,
-      },
-    ],
-  };
-
-  chart.setOption(option);
-
-  return () => {
-    chart.dispose();
-  };
-}, [salesData]);
+  const chartData = Object.entries(salesByDate).map(([date, quantity]) => ({
+    date,
+    quantity,
+  }));
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial' }}>
-      <h1>Wildberries Dashboard</h1>
+    <div style={{ padding: "2rem", fontFamily: "Arial" }}>
+      <h1>📊 Wildberries Dashboard</h1>
       <input
         type="text"
-        placeholder="Введите токен"
+        placeholder="Введите API токен"
         value={token}
         onChange={(e) => setToken(e.target.value)}
-        style={{ width: '80%', marginRight: 10 }}
+        style={{
+          width: "80%",
+          padding: "0.5rem",
+          fontSize: "1rem",
+          marginBottom: "1rem",
+        }}
       />
-      <button onClick={fetchData}>Получить данные</button>
-      <div
-        ref={chartRef}
-        style={{ width: '100%', height: '400px', marginTop: '30px' }}
-      />
+      <br />
+      <button onClick={fetchData} style={{ padding: "0.5rem 1.2rem" }}>
+        Получить данные
+      </button>
+
+      {error && (
+        <div style={{ marginTop: "1rem", color: "red" }}>
+          <strong>{error}</strong>
+        </div>
+      )}
+
+      {chartData.length > 0 && (
+        <>
+          <h2 style={{ marginTop: "2rem" }}>Продажи (по дате)</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={chartData}>
+              <CartesianGrid stroke="#ccc" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="quantity"
+                stroke="#8884d8"
+                dot={{ r: 3 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </>
+      )}
     </div>
   );
 }
