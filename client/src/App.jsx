@@ -42,8 +42,8 @@ function App() {
   .filter((item) => item.doc_type_name === "Продажа")
   .reduce((acc, item) => {
     const date = item.rr_dt || (item.sale_dt ? item.sale_dt.slice(0, 10) : null);
-    if (!date) return acc;
-    acc[date] = (acc[date] || 0) + (item.quantity || 1);
+    if (!date || !item.quantity || item.quantity <= 0) return acc;
+    acc[date] = (acc[date] || 0) + item.quantity;
     return acc;
   }, {});
 
