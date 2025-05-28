@@ -22,12 +22,13 @@ const fetchData = async () => {
       token,
     });
 
-    const salesData = response.data.sales || [];
-    const ordersData = response.data.orders || [];
+  const fullData = response.data.sales || [];
 
-    console.log("Заказы (сырой ответ):", ordersData.slice(0, 10));
-    console.log("Продажи:", salesData.slice(0, 10));
-    console.log("Заказы:", ordersData.slice(0, 10));
+const salesData = fullData.filter((item) => item.doc_type_name === "Продажа");
+const ordersData = fullData.filter((item) => item.supplier_oper_name === "Заказ");
+    console.log("Заказы (сырой ответ):", ordersData.slice(0, 20));
+    console.log("Продажи:", salesData.slice(0, 20));
+    console.log("Заказы:", ordersData.slice(0, 20));
 
     setSales({ salesData, ordersData });
   } catch (err) {
