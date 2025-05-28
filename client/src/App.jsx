@@ -12,7 +12,7 @@ import {
 
 function App() {
   const [token, setToken] = useState("");
-  const [sales, setSales] = useState({ salesData: [], ordersData: [] });
+  const [salesData, setSalesData] = useState([]);
   const [error, setError] = useState("");
 
 const fetchData = async () => {
@@ -26,14 +26,20 @@ const fetchData = async () => {
 const uniqueOps = [...new Set(fullData.map((item) => item.supplier_oper_name))];
 console.log("Все типы операций:", uniqueOps);
 
-const salesData = fullData.filter((item) => item.doc_type_name === "Продажа");
-const ordersData = fullData.filter((item) => item.supplier_oper_name === "Заказ");
-console.log("salesData sample (order_dt):", salesData.slice(0, 5).map(item => item.order_dt));
+const fullData = response.data.sales || [];
+
+const uniqueOps = [...new Set(fullData.map((item) => item.supplier_oper_name))];
+console.log("Все типы операций:", uniqueOps);
+
+console.log("Примеры order_dt:", fullData.slice(0, 5).map((item) => item.order_dt));
+
+ setSalesData(fullData); 
+    console.log("salesData sample (order_dt):", salesData.slice(0, 5).map(item => item.order_dt));
     console.log("Заказы (сырой ответ):", ordersData.slice(0, 3));
     console.log("Продажи:", salesData.slice(0, 3));
     console.log("Заказы:", ordersData.slice(0, 3));
 
-    setSales({ salesData, ordersData });
+ 
   } catch (err) {
     console.error("Ошибка при получении данных:", err);
     setError("Ошибка при получении данных. Проверьте токен или API.");
@@ -70,7 +76,6 @@ const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => (
   date,
   quantity,
 }));
-
  const chartData = Object.entries(salesByDate).map(([date, quantity]) => ({
   date,
   quantity: Number(quantity),
