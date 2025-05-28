@@ -46,6 +46,21 @@ function App() {
     acc[date] = (acc[date] || 0) + item.quantity;
     return acc;
   }, {});
+  
+    // 📦 Заказы по дате
+  const ordersByDate = sales
+    .filter((item) => item.doc_type_name === "Продажа")
+    .reduce((acc, item) => {
+      const date = item.order_dt ? item.order_dt.slice(0, 10) : null;
+      if (!date || !item.quantity || item.quantity <= 0) return acc;
+      acc[date] = (acc[date] || 0) + item.quantity;
+      return acc;
+    }, {});
+
+  const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
+    date,
+    quantity,
+  }));
 
  const chartData = Object.entries(salesByDate).map(([date, quantity]) => ({
   date,
@@ -105,6 +120,34 @@ function App() {
 </ResponsiveContainer>
         </>
       )}
+      
+            {ordersChartData.length > 0 && (
+        <>
+          <h2 style={{ marginTop: "3rem" }}>📦 Заказы (по дате)</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={ordersChartData}>
+              <defs>
+                <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Area
+                type="monotone"
+                dataKey="quantity"
+                stroke="#82ca9d"
+                fillOpacity={1}
+                fill="url(#colorOrders)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </>
+      )}
+      
     </div>
   );
 }
