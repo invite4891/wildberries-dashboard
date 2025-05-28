@@ -38,12 +38,12 @@ function App() {
   });
 
   // 📊 Группируем по дате
-  const salesByDate = filteredSales.reduce((acc, sale) => {
-    const date = sale.sale_dt?.split("T")[0];
-    const quantity = Number(sale.quantity || 0);
+  const salesByDate = sales
+  .filter((item) => item.doc_type_name === "Продажа")
+  .reduce((acc, item) => {
+    const date = item.rr_dt || (item.sale_dt ? item.sale_dt.slice(0, 10) : null);
     if (!date) return acc;
-
-    acc[date] = (acc[date] || 0) + quantity;
+    acc[date] = (acc[date] || 0) + (item.quantity || 1);
     return acc;
   }, {});
 
