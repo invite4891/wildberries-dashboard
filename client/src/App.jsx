@@ -28,6 +28,9 @@ const uniqueOps = [...new Set(fullData.map((item) => item.supplier_oper_name))];
 
  setSalesData(fullData);
  
+ console.log("Пример полей объекта:", Object.keys(fullData[0] || {}));
+console.log("Пример объекта:", fullData[0]);
+ 
  const rawOrders = fullData.filter((item) => item.gNumber && item.order_dt);
 console.log("rawOrders count:", rawOrders.length);
 console.log("Пример order_dt:", rawOrders.slice(0, 5).map(item => item.order_dt)); 
