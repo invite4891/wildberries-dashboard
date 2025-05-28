@@ -54,13 +54,11 @@ const fetchData = async () => {
   
     // 📦 Заказы по дате
 const ordersByDate = sales.ordersData.reduce((acc, order) => {
-  const date = order.orderDt ? order.orderDt.slice(0, 10) : null;
+  const date = order.date ? order.date.slice(0, 10) : null;
   if (!date) return acc;
-  const quantity = Number(order.quantity || 1);
-  acc[date] = (acc[date] || 0) + quantity;
+  acc[date] = (acc[date] || 0) + 1;
   return acc;
-}, {});
-  const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
+}, {});  const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
     date,
     quantity,
   }));
