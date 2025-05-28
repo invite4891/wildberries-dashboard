@@ -81,20 +81,23 @@ function App() {
       {chartData.length > 0 && (
         <>
           <h2 style={{ marginTop: "2rem" }}>Продажи (по дате)</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
-              <CartesianGrid stroke="#ccc" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="quantity"
-                stroke="#8884d8"
-                dot={{ r: 3 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <ResponsiveContainer width="100%" height={400}>
+  <LineChart data={salesData}>
+    <XAxis dataKey="date" />
+    <YAxis 
+      domain={['dataMin', 'dataMax']} 
+      allowDecimals={false} 
+    />
+    <Tooltip />
+    <Line 
+      type="monotone" 
+      dataKey="count" 
+      stroke="#8884d8" 
+      strokeWidth={2}
+      dot={{ r: 3 }}
+    />
+  </LineChart>
+</ResponsiveContainer>
         </>
       )}
     </div>
