@@ -25,9 +25,9 @@ const fetchData = async () => {
     const salesData = response.data.sales || [];
     const ordersData = response.data.orders || [];
 
-    console.log("Заказы (сырой ответ):", ordersData.slice(0, 3));
-    console.log("Продажи:", salesData.slice(0, 3));
-    console.log("Заказы:", ordersData.slice(0, 3));
+    console.log("Заказы (сырой ответ):", ordersData.slice(0, 10));
+    console.log("Продажи:", salesData.slice(0, 10));
+    console.log("Заказы:", ordersData.slice(0, 10));
 
     setSales({ salesData, ordersData });
   } catch (err) {
