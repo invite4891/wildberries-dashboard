@@ -55,13 +55,12 @@ const fetchData = async () => {
   }, {});
   
     // 📦 Заказы по дате
-const ordersByDate = ordersData.reduce((acc, item) => {
-  const date = item.rr_dt?.slice(0, 10);
+const ordersByDate = (sales.ordersData || []).reduce((acc, item) => {
+  const date = item.lastChangeDate?.slice(0, 10);
   if (!date) return acc;
   acc[date] = (acc[date] || 0) + 1;
   return acc;
 }, {});
-
 const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
     date,
     quantity,
