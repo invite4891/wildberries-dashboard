@@ -60,24 +60,25 @@ console.log("Пример order_dt:", rawOrders.slice(0, 5).map(item => item.ord
   }, {});
   
 
-// 📦 Заказы по дате — уникальные gNumber с датой order_dt
-const uniqueOrders = new Map();
+// 📦 Заказы по дате (фильтруем по order_dt + supplier_oper_name = "Логистика")
+const rawOrders = salesData.filter(
+  (item) => item.order_dt && item.supplier_oper_name === "Логистика"
+);
 
-salesData
-  .filter((item) => item.gNumber && item.order_dt)
-  .forEach((item) => {
-    if (!uniqueOrders.has(item.gNumber)) {
-      uniqueOrders.set(item.gNumber, item.order_dt);
-    }
-  });
-
-// Собираем заказы по дате
-const ordersByDate = {};
-uniqueOrders.forEach((dt) => {
-  const date = dt.slice(0, 10);
-  ordersByDate[date] = (ordersByDate[date] || 0) + 1;
+// Уникализируем заказы по srid
+const uniqueOrdersMap = new Map();
+rawOrders.forEach((item) => {
+  if (!uniqueOrdersMap.has(item.srid)) {
+    uniqueOrdersMap.set(item.srid, item);
+  }
 });
 
+// Группировка по дате заказа
+const ordersByDate = {};
+uniqueOrdersMap.forEach((item) => {
+  const date = item.order_dt.slice(0, 10);
+  ordersByDate[date] = (ordersByDate[date] || 0) + 1;
+});
 // ⏱️ Даты: от первой до последней
 const allDates = Object.keys({ ...salesByDate, ...ordersByDate }).sort();
 const first = new Date(allDates[0]);
