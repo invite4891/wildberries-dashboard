@@ -48,15 +48,13 @@ function App() {
   }, {});
   
     // 📦 Заказы по дате
-  const ordersByDate = sales
-    .filter((item) => item.doc_type_name === "Продажа")
-    .reduce((acc, item) => {
-      const date = item.order_dt ? item.order_dt.slice(0, 10) : null;
-      if (!date || !item.quantity || item.quantity <= 0) return acc;
-      acc[date] = (acc[date] || 0) + item.quantity;
-      return acc;
-    }, {});
-
+  const ordersByDate = sales.reduce((acc, item) => {
+  const date = item.order_dt ? item.order_dt.slice(0, 10) : null;
+  if (!date) return acc;
+  const quantity = Number(item.quantity) || 1;
+  acc[date] = (acc[date] || 0) + quantity;
+  return acc;
+}, {});
   const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
     date,
     quantity,
