@@ -79,7 +79,7 @@ uniqueOrdersMap.forEach((item) => {
 });
 // ⏱️ Даты: от первой до последней
 const allDates = Object.keys({ ...salesByDate, ...ordersByDate }).sort();
-const first = new Date(allDates[0]);
+const first = new Date("2025-03-01");
 const last = new Date(allDates[allDates.length - 1]);
 
 const getDateRange = (start, end) => {
