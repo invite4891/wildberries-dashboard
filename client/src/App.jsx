@@ -23,12 +23,14 @@ const fetchData = async () => {
     });
 
   const fullData = response.data.sales || [];
+const uniqueOps = [...new Set(fullData.map((item) => item.supplier_oper_name))];
+console.log("Все типы операций:", uniqueOps);
 
 const salesData = fullData.filter((item) => item.doc_type_name === "Продажа");
 const ordersData = fullData.filter((item) => item.supplier_oper_name === "Заказ");
-    console.log("Заказы (сырой ответ):", ordersData.slice(0, 20));
-    console.log("Продажи:", salesData.slice(0, 20));
-    console.log("Заказы:", ordersData.slice(0, 20));
+    console.log("Заказы (сырой ответ):", ordersData.slice(0, 3));
+    console.log("Продажи:", salesData.slice(0, 3));
+    console.log("Заказы:", ordersData.slice(0, 3));
 
     setSales({ salesData, ordersData });
   } catch (err) {
