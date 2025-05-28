@@ -56,9 +56,8 @@ const fetchData = async () => {
 const ordersByDate = {};
 
 sales.ordersData.forEach((order) => {
-  const date = order.date?.slice(0, 10) || order.lastChangeDate?.slice(0, 10);
+  const date = order.date?.slice(0, 10);
   if (!date || order.isCancel) return;
-
   ordersByDate[date] = (ordersByDate[date] || 0) + 1;
 });
 const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
