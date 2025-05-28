@@ -31,7 +31,9 @@ const uniqueOps = [...new Set(fullData.map((item) => item.supplier_oper_name))];
  console.log("Пример полей объекта:", Object.keys(fullData[0] || {}));
 console.log("Пример объекта:", fullData[0]);
  
- const rawOrders = fullData.filter((item) => item.gNumber && item.order_dt);
+ const rawOrders = fullData.filter(
+  (item) => item.order_dt && item.supplier_oper_name === "Логистика" && item.srid
+);
 console.log("rawOrders count:", rawOrders.length);
 console.log("Пример order_dt:", rawOrders.slice(0, 5).map(item => item.order_dt)); 
 
@@ -61,9 +63,7 @@ console.log("Пример order_dt:", rawOrders.slice(0, 5).map(item => item.ord
   
 
 // 📦 Заказы по дате (фильтруем по order_dt + supplier_oper_name = "Логистика")
-const rawOrders = salesData.filter(
-  (item) => item.order_dt && item.supplier_oper_name === "Логистика"
-);
+
 
 // Уникализируем заказы по srid
 const uniqueOrdersMap = new Map();
