@@ -23,9 +23,7 @@ const fetchData = async () => {
     });
 
     const salesData = response.data.sales || [];
-  const ordersData = (response.data.orders || []).filter(
-  (item) => item.supplier_oper_name === "Заказ"
-);
+    const ordersData = response.data.orders || [];
 
     console.log("Заказы (сырой ответ):", ordersData.slice(0, 3));
     console.log("Продажи:", salesData.slice(0, 3));
@@ -55,21 +53,22 @@ const fetchData = async () => {
   }, {});
   
     // 📦 Заказы по дате
-const uniqueOrders = new Map();
+const uniqueOrdersMap = new Map();
 
-(sales.ordersData || []).forEach((item) => {
-  if (!item.srid) return;
-  if (!uniqueOrders.has(item.srid)) {
-    uniqueOrders.set(item.srid, item);
+sales.ordersData.forEach((order) => {
+  if (!order.gNumber || !order.lastChangeDate) return;
+
+  if (!uniqueOrdersMap.has(order.gNumber)) {
+    uniqueOrdersMap.set(order.gNumber, order);
   }
 });
 
 const ordersByDate = {};
-uniqueOrders.forEach((item) => {
-  const date = item.order_dt?.slice(0, 10) || item.sale_dt?.slice(0, 10);
-  if (!date) return;
+uniqueOrdersMap.forEach((order) => {
+  const date = order.lastChangeDate.slice(0, 10);
   ordersByDate[date] = (ordersByDate[date] || 0) + 1;
-});const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
+});
+const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
     date,
     quantity,
   }));
