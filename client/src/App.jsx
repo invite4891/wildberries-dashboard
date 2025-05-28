@@ -26,7 +26,11 @@ const fetchData = async () => {
 const uniqueOps = [...new Set(fullData.map((item) => item.supplier_oper_name))];
 
 
- setSalesData(fullData); 
+ setSalesData(fullData);
+ 
+ const rawOrders = fullData.filter((item) => item.gNumber && item.order_dt);
+console.log("rawOrders count:", rawOrders.length);
+console.log("Пример order_dt:", rawOrders.slice(0, 5).map(item => item.order_dt)); 
 
 
  
@@ -57,7 +61,7 @@ const uniqueOps = [...new Set(fullData.map((item) => item.supplier_oper_name))];
 const uniqueOrders = new Map();
 
 salesData
-  .filter((item) => item.gNumber && item.order_dt && item.supplier_oper_name === "Логистика")
+  .filter((item) => item.gNumber && item.order_dt)
   .forEach((item) => {
     if (!uniqueOrders.has(item.gNumber)) {
       uniqueOrders.set(item.gNumber, item.order_dt);
