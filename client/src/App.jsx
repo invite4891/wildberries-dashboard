@@ -56,26 +56,20 @@ console.log("salesData sample (order_dt):", salesData.slice(0, 5).map(item => it
     return acc;
   }, {});
   
-    // 📦 Заказы по дате
-// 📦 Заказы по дате
-const uniqueOrdersMap = new Map();
 
-sales.ordersData.forEach((order) => {
-  if (!order.gNumber || !order.lastChangeDate) return;
+// 📦 Заказы по дате — из salesData
+const ordersByDate = sales.salesData
+  .filter((item) => item.supplier_oper_name === "Логистика" && item.order_dt)
+  .reduce((acc, item) => {
+    const date = item.order_dt.slice(0, 10);
+    acc[date] = (acc[date] || 0) + 1;
+    return acc;
+  }, {});
 
-  if (!uniqueOrdersMap.has(order.gNumber)) {
-    uniqueOrdersMap.set(order.gNumber, order);
-  }
-});
-
-const ordersByDate = {};
-uniqueOrdersMap.forEach((order) => {
-  const date = order.lastChangeDate.slice(0, 10);
-  ordersByDate[date] = (ordersByDate[date] || 0) + 1;
-});const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
-    date,
-    quantity,
-  }));
+const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
+  date,
+  quantity,
+}));
 
  const chartData = Object.entries(salesByDate).map(([date, quantity]) => ({
   date,
