@@ -47,10 +47,10 @@ function App() {
     return acc;
   }, {});
 
-  const chartData = Object.entries(salesByDate).map(([date, quantity]) => ({
-    date,
-    quantity,
-  }));
+ const chartData = Object.entries(salesByDate).map(([date, quantity]) => ({
+  date,
+  quantity: Number(quantity),
+}));
 
   return (
     <div style={{ padding: "2rem", fontFamily: "Arial" }}>
@@ -82,13 +82,14 @@ function App() {
         <>
           <h2 style={{ marginTop: "2rem" }}>Продажи (по дате)</h2>
          <ResponsiveContainer width="100%" height={300}>
+
+  <AreaChart data={chartData}>
 <defs>
   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
     <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
     <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
   </linearGradient>
 </defs>
-  <AreaChart data={chartData}>
     <CartesianGrid strokeDasharray="3 3" />
     <XAxis dataKey="date" />
     <YAxis />
