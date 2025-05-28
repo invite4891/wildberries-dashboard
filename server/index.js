@@ -1,55 +1,48 @@
+// server/index.js
 const express = require("express");
-const axios = require("axios");
 const cors = require("cors");
+const axios = require("axios");
 
 const app = express();
-const PORT = 5050;
-
 app.use(cors());
 app.use(express.json());
 
 app.post("/api/data", async (req, res) => {
   const { token } = req.body;
 
+  if (!token) {
+    return res.status(400).json({ error: "API-токен не предоставлен." });
+  }
+
   try {
-    const now = new Date();
-    const monthAgo = new Date();
-    monthAgo.setDate(now.getDate() - 30);
+    const dateFrom = "2025-05-01";
+    const dateTo = new Date().toISOString().split("T")[0];
 
-    const dateFrom = monthAgo.toISOString().split("T")[0];
-    const dateTo = now.toISOString().split("T")[0];
-
-    const response = await axios.post(
-      "https://suppliers-api.wildberries.ru/api/v1/supplier/report/detail-by-period",
-      {
-        dateFrom,
-        dateTo,
-      },
+    const response = await axios.get(
+      `https://statistics-api.wildberries.ru/api/v5/supplier/reportDetailByPeriod`,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+          Authorization: token,
+        },
+        params: {
+          dateFrom,
+          dateTo,
+          rrdid: 0,
         },
       }
     );
 
-    res.json(response.data);
-  } catch (error) {
-    console.error("Ошибка API:", error.message);
-    if (error.response) {
-      res.status(error.response.status).json({
-        error: "Ошибка API",
-        details: error.response.data,
-      });
-    } else {
-      res.status(500).json({
-        error: "Ошибка API",
-        details: error.message,
-      });
-    }
+    res.json({ sales: response.data });
+  } catch (err) {
+    console.error("Ошибка запроса к Wildberries API:", err?.response?.data || err.message);
+    res.status(500).json({
+      error: "Ошибка API",
+      details: err?.response?.data || err.message,
+    });
   }
 });
 
+const PORT = 5050;
 app.listen(PORT, () => {
-  console.log(`✅ Backend запущен на порту ${PORT}`);
+  console.log(`Backend запущен на порту ${PORT}`);
 });
