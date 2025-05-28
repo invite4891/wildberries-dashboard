@@ -56,6 +56,7 @@ const ordersData = fullData.filter((item) => item.supplier_oper_name === "Зак
   }, {});
   
     // 📦 Заказы по дате
+// 📦 Заказы по дате
 const uniqueOrdersMap = new Map();
 
 sales.ordersData.forEach((order) => {
@@ -70,8 +71,7 @@ const ordersByDate = {};
 uniqueOrdersMap.forEach((order) => {
   const date = order.lastChangeDate.slice(0, 10);
   ordersByDate[date] = (ordersByDate[date] || 0) + 1;
-});
-const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
+});const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
     date,
     quantity,
   }));
