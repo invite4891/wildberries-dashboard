@@ -12,7 +12,7 @@ import {
 
 function App() {
   const [token, setToken] = useState("");
-  const [sales, setSales] = useState({ salesData: [], ordersData: [] });
+  const [salesData, setSalesData] = useState([]);
   const [error, setError] = useState("");
 
 const fetchData = async () => {
@@ -22,15 +22,9 @@ const fetchData = async () => {
       token,
     });
 
-    const salesData = response.data.sales || [];
-    const ordersData = response.data.orders || [];
+    const data = response.data.sales || [];
+setSalesData(data);
 
-    console.log("ordersData (raw):", ordersData);
-    console.log("Заказы (сырой ответ):", ordersData.slice(0, 3));
-    console.log("Продажи:", salesData.slice(0, 3));
-    console.log("Заказы:", ordersData.slice(0, 3));
-
-    setSales({ salesData, ordersData });
   } catch (err) {
     console.error("Ошибка при получении данных:", err);
     setError("Ошибка при получении данных. Проверьте токен или API.");
@@ -38,13 +32,13 @@ const fetchData = async () => {
 };
 
   // 🔍 Фильтруем только записи с положительным количеством
-  const filteredSales = sales.salesData.filter((sale) => {
-    const quantity = Number(sale.quantity || 0);
-    return quantity > 0;
-  });
+  const filteredSales = salesData.filter((sale) => {
+  const quantity = Number(sale.quantity || 0);
+  return quantity > 0;
+});
 
   // 📊 Группируем по дате
-  const salesByDate = sales.salesData
+  const salesByDate = salesData
   .filter((item) => item.doc_type_name === "Продажа")
   .reduce((acc, item) => {
     const date = item.rr_dt || (item.sale_dt ? item.sale_dt.slice(0, 10) : null);
@@ -54,13 +48,15 @@ const fetchData = async () => {
   }, {});
   
     // 📦 Заказы по дате
-const ordersByDate = {};
-
-sales.ordersData.forEach((order) => {
-  const date = order.date?.slice(0, 10);
-  if (!date || order.isCancel) return;
-  ordersByDate[date] = (ordersByDate[date] || 0) + 1;
-});
+const ordersByDate = salesData
+  .filter((item) => item.doc_type_name === "Заказ")
+  .reduce((acc, item) => {
+    const date = item.rr_dt || item.date || item.sale_dt;
+    if (!date) return acc;
+    const day = date.slice(0, 10);
+    acc[day] = (acc[day] || 0) + (item.quantity || 1);
+    return acc;
+  }, {});
 const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
     date,
     quantity,
