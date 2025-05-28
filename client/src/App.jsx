@@ -220,19 +220,14 @@ const recentOrdersChartData = Object.entries(recentOrdersByDate).map(
     <ResponsiveContainer width="100%" height={300}>
       <AreaChart
   data={
-    Object.entries(
-      recentOrders.reduce((acc, item) => {
-        const date = item.date?.slice(0, 10);
-        if (date) {
-          acc[date] = (acc[date] || 0) + 1;
-        }
-        return acc;
-      }, {})
-    )
-      .map(([date, quantity]) => ({ date, quantity }))
-      .sort((a, b) => new Date(a.date) - new Date(b.date)) // <-- сортировка по дате
-  }
->        <defs>
+  Array.from({ length: 7 }).map((_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - 6 + i); // последние 7 дней
+    const isoDate = date.toISOString().slice(0, 10);
+    const quantity = recentOrders.filter(item => item.date?.slice(0, 10) === isoDate).length;
+    return { date: isoDate, quantity };
+  })
+}>        <defs>
           <linearGradient id="colorRecentOrders" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="#ff69b4" stopOpacity={0.8} />
             <stop offset="95%" stopColor="#ff69b4" stopOpacity={0} />
