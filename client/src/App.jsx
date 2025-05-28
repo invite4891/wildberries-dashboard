@@ -85,7 +85,7 @@ function App() {
             <LineChart data={chartData}>
               <CartesianGrid stroke="#ccc" />
               <XAxis dataKey="date" />
-              <YAxis />
+              <YAxis domain={['dataMin - 1', 'dataMax + 1']} allowDecimals={false} />
               <Tooltip />
               <Line
                 type="monotone"
