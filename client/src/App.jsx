@@ -13,6 +13,7 @@ import {
 function App() {
   const [token, setToken] = useState("");
   const [salesData, setSalesData] = useState([]);
+  const [recentOrders, setRecentOrders] = useState([]);
   const [error, setError] = useState("");
 
 const fetchData = async () => {
@@ -27,6 +28,7 @@ const uniqueOps = [...new Set(fullData.map((item) => item.supplier_oper_name))];
 
 
  setSalesData(fullData);
+ fetchRecentOrders();
  
  console.log("Пример полей объекта:", Object.keys(fullData[0] || {}));
 console.log("Пример объекта:", fullData[0]);
@@ -115,6 +117,17 @@ const chartData = fullDateRange.map((date) => ({
   date,
   quantity: salesByDate[date] || 0,
 }));
+
+// 🔄 Заказы за последние 7 дней — группировка по дате
+const recentOrdersByDate = recentOrders.reduce((acc, item) => {
+  const date = item.date.slice(0, 10);
+  acc[date] = (acc[date] || 0) + item.quantity;
+  return acc;
+}, {});
+
+const recentOrdersChartData = Object.entries(recentOrdersByDate).map(
+  ([date, quantity]) => ({ date, quantity })
+);
 
   return (
     <div style={{ padding: "2rem", fontFamily: "Arial" }}>
