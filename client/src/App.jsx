@@ -12,60 +12,64 @@ import {
 
 function App() {
   const [token, setToken] = useState("");
-  const [salesData, setSalesData] = useState([]);
+  const [sales, setSales] = useState({ salesData: [], ordersData: [] });
   const [error, setError] = useState("");
 
-const fetchData = async () => {
-  try {
-    setError("");
-    const response = await axios.post("https://c5e3-195-58-50-125.ngrok-free.app/api/data", {
-      token,
-    });
+  const fetchData = async () => {
+    try {
+      setError("");
+      const response = await axios.post("https://c5e3-195-58-50-125.ngrok-free.app/api/data", {
+        token,
+      });
 
-    const data = response.data.sales || [];
-setSalesData(data);
+      const salesData = response.data.sales || [];
+      const ordersData = response.data.orders || [];
 
-  } catch (err) {
-    console.error("Ошибка при получении данных:", err);
-    setError("Ошибка при получении данных. Проверьте токен или API.");
-  }
-};
+      console.log("Продажи:", salesData.slice(0, 3));
+      console.log("Заказы:", ordersData.slice(0, 3));
+
+      setSales({ salesData, ordersData });
+    } catch (err) {
+      console.error("Ошибка при получении данных:", err);
+      setError("Ошибка при получении данных. Проверьте токен или API.");
+    }
+  };
 
   // 🔍 Фильтруем только записи с положительным количеством
-  const filteredSales = salesData.filter((sale) => {
-  const quantity = Number(sale.quantity || 0);
-  return quantity > 0;
-});
+  const filteredSales = sales.salesData.filter((sale) => {
+    const quantity = Number(sale.quantity || 0);
+    return quantity > 0;
+  });
 
-  // 📊 Группируем по дате
-  const salesByDate = salesData
-  .filter((item) => item.doc_type_name === "Продажа")
-  .reduce((acc, item) => {
-    const date = item.rr_dt || (item.sale_dt ? item.sale_dt.slice(0, 10) : null);
-    if (!date || !item.quantity || item.quantity <= 0) return acc;
-    acc[date] = (acc[date] || 0) + item.quantity;
-    return acc;
-  }, {});
-  
-    // 📦 Заказы по дате
-const ordersByDate = salesData
-  .filter((item) => item.doc_type_name === "Заказ")
-  .reduce((acc, item) => {
-    const date = item.rr_dt || item.date || item.sale_dt;
-    if (!date) return acc;
-    const day = date.slice(0, 10);
-    acc[day] = (acc[day] || 0) + (item.quantity || 1);
-    return acc;
-  }, {});
-const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
+  // 📊 Группируем продажи по дате
+  const salesByDate = sales.salesData
+    .filter((item) => item.doc_type_name === "Продажа")
+    .reduce((acc, item) => {
+      const date = item.rr_dt || (item.sale_dt ? item.sale_dt.slice(0, 10) : null);
+      if (!date || !item.quantity || item.quantity <= 0) return acc;
+      acc[date] = (acc[date] || 0) + item.quantity;
+      return acc;
+    }, {});
+
+  // 📦 Группируем заказы по дате из salesData
+  const ordersByDate = sales.salesData
+    .filter((item) => item.doc_type_name === "Заказ" && item.quantity > 0)
+    .reduce((acc, item) => {
+      const date = item.rr_dt?.slice(0, 10);
+      if (!date) return acc;
+      acc[date] = (acc[date] || 0) + item.quantity;
+      return acc;
+    }, {});
+
+  const chartData = Object.entries(salesByDate).map(([date, quantity]) => ({
+    date,
+    quantity: Number(quantity),
+  }));
+
+  const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
     date,
     quantity,
   }));
-
- const chartData = Object.entries(salesByDate).map(([date, quantity]) => ({
-  date,
-  quantity: Number(quantity),
-}));
 
   return (
     <div style={{ padding: "2rem", fontFamily: "Arial" }}>
@@ -96,32 +100,31 @@ const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => (
       {chartData.length > 0 && (
         <>
           <h2 style={{ marginTop: "2rem" }}>Продажи (по дате)</h2>
-         <ResponsiveContainer width="100%" height={300}>
-
-  <AreaChart data={chartData}>
-<defs>
-  <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-    <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-  </linearGradient>
-</defs>
-    <CartesianGrid strokeDasharray="3 3" />
-    <XAxis dataKey="date" />
-    <YAxis />
-    <Tooltip />
-    <Area
-  type="monotone"
-  dataKey="quantity"
-  stroke="#8884d8"
-  fillOpacity={1}
-  fill="url(#colorSales)"
-/>
-  </AreaChart>
-</ResponsiveContainer>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Area
+                type="monotone"
+                dataKey="quantity"
+                stroke="#8884d8"
+                fillOpacity={1}
+                fill="url(#colorSales)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </>
       )}
-      
-            {ordersChartData.length > 0 && (
+
+      {ordersChartData.length > 0 && (
         <>
           <h2 style={{ marginTop: "3rem" }}>📦 Заказы (по дате)</h2>
           <ResponsiveContainer width="100%" height={300}>
@@ -147,7 +150,6 @@ const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => (
           </ResponsiveContainer>
         </>
       )}
-      
     </div>
   );
 }
