@@ -219,19 +219,20 @@ const recentOrdersChartData = Object.entries(recentOrdersByDate).map(
     <h2 style={{ marginTop: "3rem" }}>💖 Заказы за последние 7 дней</h2>
     <ResponsiveContainer width="100%" height={300}>
       <AreaChart
-        data={
-          Object.entries(
-            recentOrders.reduce((acc, item) => {
-              const date = item.date?.slice(0, 10);
-              if (date) {
-                acc[date] = (acc[date] || 0) + 1;
-              }
-              return acc;
-            }, {})
-          ).map(([date, quantity]) => ({ date, quantity }))
+  data={
+    Object.entries(
+      recentOrders.reduce((acc, item) => {
+        const date = item.date?.slice(0, 10);
+        if (date) {
+          acc[date] = (acc[date] || 0) + 1;
         }
-      >
-        <defs>
+        return acc;
+      }, {})
+    )
+      .map(([date, quantity]) => ({ date, quantity }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date)) // <-- сортировка по дате
+  }
+>        <defs>
           <linearGradient id="colorRecentOrders" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="#ff69b4" stopOpacity={0.8} />
             <stop offset="95%" stopColor="#ff69b4" stopOpacity={0} />
