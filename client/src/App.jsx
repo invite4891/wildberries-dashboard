@@ -1,63 +1,101 @@
-import React, { useState } from 'react';
-import { Line } from 'react-chartjs-2';
-import 'chart.js/auto';
+import React, { useState } from "react";
+import axios from "axios";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
 
 function App() {
-  const [token, setToken] = useState('');
-  const [salesData, setSalesData] = useState([]);
-  const [error, setError] = useState('');
+  const [token, setToken] = useState("");
+  const [sales, setSales] = useState([]);
+  const [error, setError] = useState("");
 
   const fetchData = async () => {
     try {
-      setError('');
-      const response = await fetch('https://c5e3-195-58-50-125.ngrok-free.app/api/data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
+      setError("");
+      const response = await axios.post("https://c5e3-195-58-50-125.ngrok-free.app/api/data", {
+        token,
       });
 
-      const result = await response.json();
-      if (result.error) {
-        setError(`Ошибка при получении данных. Проверьте токен или API.`);
-        return;
-      }
-
-      setSalesData(result.sales);
+      const data = response.data.sales || [];
+      console.log("Данные из API:", data.slice(0, 5)); // отладка
+      setSales(data);
     } catch (err) {
-      console.error(err);
-      setError('Ошибка при подключении к серверу.');
+      console.error("Ошибка при получении данных:", err);
+      setError("Ошибка при получении данных. Проверьте токен или API.");
     }
   };
 
-  const chartData = {
-    labels: salesData.map(item => item.date),
-    datasets: [
-      {
-        label: 'Продажи (по дате)',
-        data: salesData.map(item => item.count),
-        borderColor: 'blue',
-        fill: false,
-        tension: 0.1,
-      },
-    ],
-  };
+  // 🔍 Фильтруем только записи с положительным количеством
+  const filteredSales = sales.filter((sale) => {
+    const quantity = Number(sale.quantity || 0);
+    return quantity > 0;
+  });
+
+  // 📊 Группируем по дате
+  const salesByDate = filteredSales.reduce((acc, sale) => {
+    const date = sale.sale_dt?.split("T")[0];
+    const quantity = Number(sale.quantity || 0);
+    if (!date) return acc;
+
+    acc[date] = (acc[date] || 0) + quantity;
+    return acc;
+  }, {});
+
+  const chartData = Object.entries(salesByDate).map(([date, quantity]) => ({
+    date,
+    quantity,
+  }));
 
   return (
-    <div>
-      <h2>📊 Wildberries Статистика продаж</h2>
+    <div style={{ padding: "2rem", fontFamily: "Arial" }}>
+      <h1>📊 Wildberries Dashboard</h1>
       <input
         type="text"
+        placeholder="Введите API токен"
         value={token}
         onChange={(e) => setToken(e.target.value)}
-        style={{ width: '80%' }}
+        style={{
+          width: "80%",
+          padding: "0.5rem",
+          fontSize: "1rem",
+          marginBottom: "1rem",
+        }}
       />
-      <button onClick={fetchData}>Получить данные</button>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {salesData.length > 0 && (
-        <div>
-          <h3>График продаж по дням</h3>
-          <Line data={chartData} />
+      <br />
+      <button onClick={fetchData} style={{ padding: "0.5rem 1.2rem" }}>
+        Получить данные
+      </button>
+
+      {error && (
+        <div style={{ marginTop: "1rem", color: "red" }}>
+          <strong>{error}</strong>
         </div>
+      )}
+
+      {chartData.length > 0 && (
+        <>
+          <h2 style={{ marginTop: "2rem" }}>Продажи (по дате)</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={chartData}>
+              <CartesianGrid stroke="#ccc" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="quantity"
+                stroke="#8884d8"
+                dot={{ r: 3 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </>
       )}
     </div>
   );
