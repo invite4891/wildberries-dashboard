@@ -28,6 +28,7 @@ console.log("Все типы операций:", uniqueOps);
 
 const salesData = fullData.filter((item) => item.doc_type_name === "Продажа");
 const ordersData = fullData.filter((item) => item.supplier_oper_name === "Заказ");
+console.log("salesData sample (order_dt):", salesData.slice(0, 5).map(item => item.order_dt));
     console.log("Заказы (сырой ответ):", ordersData.slice(0, 3));
     console.log("Продажи:", salesData.slice(0, 3));
     console.log("Заказы:", ordersData.slice(0, 3));
