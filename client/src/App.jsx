@@ -53,24 +53,27 @@ const uniqueOps = [...new Set(fullData.map((item) => item.supplier_oper_name))];
   }, {});
   
 
-// 📦 Заказы по дате — из salesData
-const ordersByDate = salesData
-  .filter((item) => item.supplier_oper_name === "Логистика" && item.order_dt)
-  .reduce((acc, item) => {
-    const date = item.order_dt.slice(0, 10);
-    acc[date] = (acc[date] || 0) + 1;
-    return acc;
-  }, {});
+// 📦 Новый расчёт заказов
+const uniqueOrders = new Map();
+
+salesData
+  .filter(item => item.gNumber && item.order_dt)
+  .forEach(item => {
+    if (!uniqueOrders.has(item.gNumber)) {
+      uniqueOrders.set(item.gNumber, item.order_dt);
+    }
+  });
+
+const ordersByDate = {};
+uniqueOrders.forEach(date => {
+  const d = date.slice(0, 10);
+  ordersByDate[d] = (ordersByDate[d] || 0) + 1;
+});
 
 const ordersChartData = Object.entries(ordersByDate).map(([date, quantity]) => ({
   date,
   quantity,
 }));
- const chartData = Object.entries(salesByDate).map(([date, quantity]) => ({
-  date,
-  quantity: Number(quantity),
-}));
-
   return (
     <div style={{ padding: "2rem", fontFamily: "Arial" }}>
       <h1>📊 Wildberries Dashboard</h1>
