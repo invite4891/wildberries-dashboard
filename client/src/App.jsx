@@ -12,24 +12,28 @@ import {
 
 function App() {
   const [token, setToken] = useState("");
-  const [sales, setSales] = useState([]);
+  const [sales, setSales] = useState({ salesData: [], ordersData: [] });
   const [error, setError] = useState("");
 
-  const fetchData = async () => {
-    try {
-      setError("");
-      const response = await axios.post("https://c5e3-195-58-50-125.ngrok-free.app/api/data", {
-        token,
-      });
+const fetchData = async () => {
+  try {
+    setError("");
+    const response = await axios.post("https://c5e3-195-58-50-125.ngrok-free.app/api/data", {
+      token,
+    });
 
-      const data = response.data.sales || [];
-      console.log("Данные из API:", data.slice(0, 5)); // отладка
-      setSales(data);
-    } catch (err) {
-      console.error("Ошибка при получении данных:", err);
-      setError("Ошибка при получении данных. Проверьте токен или API.");
-    }
-  };
+    const salesData = response.data.sales || [];
+    const ordersData = response.data.orders || [];
+
+    console.log("Продажи:", salesData.slice(0, 3));
+    console.log("Заказы:", ordersData.slice(0, 3));
+
+    setSales({ salesData, ordersData });
+  } catch (err) {
+    console.error("Ошибка при получении данных:", err);
+    setError("Ошибка при получении данных. Проверьте токен или API.");
+  }
+};
 
   // 🔍 Фильтруем только записи с положительным количеством
   const filteredSales = sales.filter((sale) => {
@@ -48,10 +52,10 @@ function App() {
   }, {});
   
     // 📦 Заказы по дате
-  const ordersByDate = sales.reduce((acc, item) => {
-  const date = item.order_dt ? item.order_dt.slice(0, 10) : null;
+const ordersByDate = sales.ordersData.reduce((acc, order) => {
+  const date = order.orderDt ? order.orderDt.slice(0, 10) : null;
   if (!date) return acc;
-  const quantity = Number(item.quantity) || 1;
+  const quantity = Number(order.quantity || 1);
   acc[date] = (acc[date] || 0) + quantity;
   return acc;
 }, {});
